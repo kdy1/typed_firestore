@@ -6,8 +6,6 @@ import 'package:quiver/core.dart';
 
 import 'data.dart';
 
-export 'data.dart';
-
 class TypedFirestore {
   final fs.Firestore _inner;
   final Serializers _serializers;
@@ -41,8 +39,7 @@ class DocRef<D extends DocData> {
   String get path => raw.path;
 
   ///	Returns the reference of a collection contained inside of this document.
-  CollRef<T> collection<T extends DocData>(String path) =>
-      CollRef._(_firestore, raw.collection(path));
+  CollRef<T> collection<T extends DocData>(String path) => CollRef._(_firestore, raw.collection(path));
 
   /// Returns the reference of a collection contained inside of this document.
   Future<void> delete() => raw.delete();
@@ -67,16 +64,13 @@ class DocRef<D extends DocData> {
   /// If merge is true, the provided data will be merged into an existing document instead of overwriting.
   Future<void> setData(D data, {bool merge: false}) {
     return raw.setData(
-      _firestore._serializers.serialize(data, specifiedType: FullType(D))
-          as Map<String, dynamic>,
+      _firestore._serializers.serialize(data, specifiedType: FullType(D)) as Map<String, dynamic>,
       merge: merge,
     );
   }
 
   Stream<DocSnapshot<D>> snapshots() {
-    return raw
-        .snapshots()
-        .map((ds) => DocSnapshot<D>._from(_firestore, this, ds.data));
+    return raw.snapshots().map((ds) => DocSnapshot<D>._from(_firestore, this, ds.data));
   }
 
   /// Updates fields in the document referred to by this DocumentReference.
@@ -84,8 +78,7 @@ class DocRef<D extends DocData> {
   /// If no document exists yet, the update will fail.
   Future<void> updateData(D data) {
     return raw.updateData(
-      _firestore._serializers.serialize(data, specifiedType: FullType(D))
-          as Map<String, dynamic>,
+      _firestore._serializers.serialize(data, specifiedType: FullType(D)) as Map<String, dynamic>,
     );
   }
 
@@ -93,8 +86,7 @@ class DocRef<D extends DocData> {
   int get hashCode => hash2(_firestore, raw);
 
   @override
-  bool operator ==(other) =>
-      other is DocRef<D> && _firestore == other._firestore && raw == other.raw;
+  bool operator ==(other) => other is DocRef<D> && _firestore == other._firestore && raw == other.raw;
 }
 
 /// [DocumentSnapshot]
@@ -103,12 +95,8 @@ class DocSnapshot<D extends DocData> {
       : assert(ref != null),
         assert(data != null);
 
-  DocSnapshot._from(
-      TypedFirestore firestore, DocRef<D> ref, Map<String, dynamic> data)
-      : this(
-            ref,
-            firestore._serializers.deserialize(data, specifiedType: FullType(D))
-                as D);
+  DocSnapshot._from(TypedFirestore firestore, DocRef<D> ref, Map<String, dynamic> data)
+      : this(ref, firestore._serializers.deserialize(data, specifiedType: FullType(D)) as D);
 
   /// The reference that produced this snapshot
   final DocRef<D> ref;
@@ -226,9 +214,7 @@ class TypedQuery<D extends DocData> {
 
     return TypedQuerySnapshot(
       qs.documentChanges,
-      qs.documents
-          .map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds))
-          .toList(growable: false),
+      qs.documents.map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds)).toList(growable: false),
     );
   }
 
@@ -237,16 +223,13 @@ class TypedQuery<D extends DocData> {
     return _inner.snapshots().map((qs) {
       return TypedQuerySnapshot(
         qs.documentChanges,
-        qs.documents
-            .map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds))
-            .toList(growable: false),
+        qs.documents.map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds)).toList(growable: false),
       );
     });
   }
 
   /// Creates and returns a new Query that's additionally limited to only return up to the specified number of documents.
-  TypedQuery<D> limit(int length) =>
-      TypedQuery(_firestore, _inner.limit(length));
+  TypedQuery<D> limit(int length) => TypedQuery(_firestore, _inner.limit(length));
 
   /// Creates and returns a new Query that's additionally sorted by the specified field.
   TypedQuery<D> orderBy(
