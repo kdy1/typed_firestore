@@ -1,9 +1,38 @@
-# types_firestore
+# typed_firestore
 
 Typed firestore entity.
 
-## Getting Started
+## Usage
 
-For help getting started with Flutter, view our online [documentation](https://flutter.io/).
 
-For help on editing package code, view the [documentation](https://flutter.io/developing-packages/).
+
+```dart
+
+abstract class Car extends DocData implements Built<Car, CarBuilder> {
+  static Serializer<Car> get serializer => _$carSerializer;
+
+  String get title;
+
+  @nullable
+  String get nullableField;
+
+  Car._();
+
+  factory Car([updates(CarBuilder b)]) = _$Car;
+}
+
+@SerializersFor(const [
+  Car,
+])
+Serializers serializers = _$serializers;
+
+
+final firestore = new TypedFirestore(
+  Firestore.instance,
+  (serializers.toBuilder()..addPlugin(StandardJsonPlugin())).build(),
+);
+
+final CollRef<Car> cars = firestore.collection<Car>('cars');
+
+
+```
