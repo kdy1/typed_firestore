@@ -91,12 +91,10 @@ class DocRef<D extends DocData> {
 
 /// [DocumentSnapshot]
 class DocSnapshot<D extends DocData> {
-  DocSnapshot(this.ref, this.data)
-      : assert(ref != null),
-        assert(data != null);
+  DocSnapshot(this.ref, this.data) : assert(ref != null);
 
   DocSnapshot._from(TypedFirestore firestore, DocRef<D> ref, Map<String, dynamic> data)
-      : this(ref, firestore._serializers.deserialize(data, specifiedType: FullType(D)) as D);
+      : this(ref, data == null ? null : firestore._serializers.deserialize(data, specifiedType: FullType(D)) as D);
 
   /// The reference that produced this snapshot
   final DocRef<D> ref;
