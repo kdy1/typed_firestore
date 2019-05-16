@@ -198,12 +198,51 @@ class TypedQuery<D extends DocData> {
         ));
   }
 
+  /// Takes a list of [values], creates and returns a new [Query] that starts
+  /// after the provided fields relative to the order of the query.
   ///
-  /// //
-  // TODO: TypedQuery<D> startAfter
-  // TODO: TypedQuery<D> startAt
-  // TODO: TypedQuery<D> endAt
-  // TODO: TypedQuery<D> endBefore
+  /// The [values] must be in order of [orderBy] filters.
+  ///
+  /// Cannot be used in combination with [startAt], [startAfterDocument], or
+  /// [startAtDocument].
+  TypedQuery<D> startAfter(List<dynamic> values) {
+    return TypedQuery(_firestore, _inner.startAfter(values));
+  }
+
+  /// Takes a list of [values], creates and returns a new [Query] that starts at
+  /// the provided fields relative to the order of the query.
+  ///
+  /// The [values] must be in order of [orderBy] filters.
+  ///
+  /// Cannot be used in combination with [startAfter], [startAfterDocument],
+  /// or [startAtDocument].
+  TypedQuery<D> startAt(List<dynamic> values) {
+    return TypedQuery(_firestore, _inner.startAt(values));
+  }
+
+  // TODO: TypedQuery<D> endAtDocument
+
+  /// Takes a list of [values], creates and returns a new [Query] that ends at the
+  /// provided fields relative to the order of the query.
+  ///
+  /// The [values] must be in order of [orderBy] filters.
+  ///
+  /// Cannot be used in combination with [endBefore], [endBeforeDocument], or
+  /// [endAtDocument].
+  TypedQuery<D> endAt(List<dynamic> values) {
+    return TypedQuery(_firestore, _inner.endAt(values));
+  }
+
+  /// Takes a list of [values], creates and returns a new [Query] that ends before
+  /// the provided fields relative to the order of the query.
+  ///
+  /// The [values] must be in order of [orderBy] filters.
+  ///
+  /// Cannot be used in combination with [endAt], [endBeforeDocument], or
+  /// [endBeforeDocument]
+  TypedQuery<D> endBefore(List<dynamic> values) {
+    return TypedQuery(_firestore, _inner.endBefore(values));
+  }
 
   /// Fetch the documents for this query
   ///
