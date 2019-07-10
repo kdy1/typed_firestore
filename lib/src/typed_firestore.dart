@@ -50,10 +50,10 @@ class DocRef<D extends DocData> {
   Future<DocSnapshot<D>> get() {
     return raw.get().then(
           (ds) => DocSnapshot<D>._from(
-                _firestore,
-                this,
-                ds.data,
-              ),
+            _firestore,
+            this,
+            ds.data,
+          ),
         );
   }
 
@@ -134,13 +134,13 @@ class CollRef<D extends DocData> extends TypedQuery<D> {
   /// A string containing the slash-separated path to this CollectionReference (relative to the root of the database).
   String get path => _ref.path;
 
-  /// For subcollections, parent returns the containing DocumentReference.
+  /// For subcollections, parent returns the containing [DocumentReference].
   ///
   /// For root collections, null is returned.
-  CollRef parent<T>() {
+  DocRef<P> parent<P extends DocData>() {
     final p = _ref.parent();
     if (p == null) return null;
-    return CollRef._(_firestore, p);
+    return DocRef._(_firestore, p);
   }
 
   /// Returns a DocumentReference with the provided path.

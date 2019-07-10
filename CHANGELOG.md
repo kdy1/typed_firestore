@@ -1,3 +1,7 @@
+## [0.2.0+1] - 2019-07-10
+
+ - Fixed a bug.
+
 ## [0.2.0] - 2019-07-10
 
  - Bumped version of cloud_firestore.
