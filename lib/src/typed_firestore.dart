@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:built_value/serializer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as fs;
+import 'package:flutter/material.dart';
 import 'package:quiver/core.dart';
 
 import 'data.dart';
@@ -183,7 +184,6 @@ class TypedQuery<D extends DocData> {
     dynamic isLessThanOrEqualTo,
     dynamic isGreaterThan,
     dynamic isGreaterThanOrEqualTo,
-    dynamic arrayContains,
     bool isNull,
   }) {
     return TypedQuery(
@@ -195,7 +195,6 @@ class TypedQuery<D extends DocData> {
           isLessThanOrEqualTo: isLessThanOrEqualTo,
           isGreaterThan: isGreaterThan,
           isGreaterThanOrEqualTo: isGreaterThanOrEqualTo,
-          arrayContains: arrayContains,
           isNull: isNull,
         ));
   }
@@ -246,6 +245,39 @@ class TypedQuery<D extends DocData> {
     return TypedQuery(_firestore, _inner.endBefore(values));
   }
 
+  /// Creates and returns a new Query that's additionally limited to only return up to the specified number of documents.
+  TypedQuery<D> limit(int length) => TypedQuery(_firestore, _inner.limit(length));
+
+  /// Creates and returns a new Query that's additionally sorted by the specified field.
+  TypedQuery<D> orderBy(
+    String field, {
+    bool descending: false,
+  }) =>
+      TypedQuery(
+          _firestore,
+          _inner.orderBy(
+            field,
+            descending: descending,
+          ));
+
+  /// `mapper` is called **after** fetching documents.
+  TypedQuery<D> mapList(Mapper<List<DocSnapshot<D>>> mapper) {
+    return _MapList(
+      firestore: _firestore,
+      inner: _inner,
+      mapper: mapper,
+    );
+  }
+
+  /// `mapper` is called **after** fetching documents.
+  TypedQuery<D> map(Mapper<D> mapper) {
+    return _MappedQuery(
+      firestore: _firestore,
+      inner: _inner,
+      mapper: mapper,
+    );
+  }
+
   /// Fetch the documents for this query
   ///
   Future<TypedQuerySnapshot<D>> getDocs() async {
@@ -266,19 +298,100 @@ class TypedQuery<D extends DocData> {
       );
     });
   }
+}
 
-  /// Creates and returns a new Query that's additionally limited to only return up to the specified number of documents.
-  TypedQuery<D> limit(int length) => TypedQuery(_firestore, _inner.limit(length));
+typedef FutureOr<T> Mapper<T>(T data);
 
-  /// Creates and returns a new Query that's additionally sorted by the specified field.
-  TypedQuery<D> orderBy(
-    String field, {
-    bool descending: false,
-  }) =>
-      TypedQuery(
-          _firestore,
-          _inner.orderBy(
-            field,
-            descending: descending,
-          ));
+class _MappedQuery<D extends DocData> extends TypedQuery<D> {
+  final Mapper<D> mapper;
+
+  _MappedQuery({
+    @required TypedFirestore firestore,
+    @required fs.Query inner,
+    @required this.mapper,
+  })  : assert(firestore != null),
+        assert(inner != null),
+        assert(mapper != null),
+        super(firestore, inner);
+
+  /// Fetch the documents for this query
+  ///
+  Future<TypedQuerySnapshot<D>> getDocs() async {
+    final qs = await _inner.getDocuments();
+
+    final docs = await Future.wait(
+      qs.documents.map((ds) async {
+        final ss = DocSnapshot<D>._fromSnapshot(_firestore, ds);
+        return DocSnapshot(ss.ref, await mapper(ss.data));
+      }).toList(growable: false),
+    );
+
+    return TypedQuerySnapshot(
+      qs.documentChanges,
+      docs,
+    );
+  }
+
+  /// Notifies of query results at this location
+  Stream<TypedQuerySnapshot<D>> snapshots() async* {
+    await for (final qs in _inner.snapshots()) {
+      final docs = await Future.wait(
+        qs.documents.map((ds) async {
+          final ss = DocSnapshot<D>._fromSnapshot(_firestore, ds);
+          return DocSnapshot(ss.ref, await mapper(ss.data));
+        }).toList(growable: false),
+      );
+
+      yield TypedQuerySnapshot(
+        qs.documentChanges,
+        docs,
+      );
+    }
+  }
+}
+
+class _MapList<D extends DocData> extends TypedQuery<D> {
+  final Mapper<List<DocSnapshot<D>>> mapper;
+
+  _MapList({
+    @required TypedFirestore firestore,
+    @required fs.Query inner,
+    @required this.mapper,
+  })  : assert(firestore != null),
+        assert(inner != null),
+        assert(mapper != null),
+        super(firestore, inner);
+
+  /// Fetch the documents for this query
+  ///
+  Future<TypedQuerySnapshot<D>> getDocs() async {
+    final qs = await _inner.getDocuments();
+
+    return TypedQuerySnapshot(
+      qs.documentChanges,
+      await mapper(
+        qs.documents.map((ds) {
+          return DocSnapshot<D>._fromSnapshot(_firestore, ds);
+        }).toList(
+          growable: false,
+        ),
+      ),
+    );
+  }
+
+  /// Notifies of query results at this location
+  Stream<TypedQuerySnapshot<D>> snapshots() async* {
+    await for (final qs in _inner.snapshots()) {
+      yield TypedQuerySnapshot(
+        qs.documentChanges,
+        await mapper(
+          qs.documents.map((ds) {
+            return DocSnapshot<D>._fromSnapshot(_firestore, ds);
+          }).toList(
+            growable: false,
+          ),
+        ),
+      );
+    }
+  }
 }
