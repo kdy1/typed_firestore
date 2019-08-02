@@ -20,3 +20,5 @@ GeneratedPluginRegistrant.m
 *.iml
 .idea/
 *.lock
+
+local.properties
