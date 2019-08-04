@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:built_value/serializer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as fs;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:quiver/core.dart';
 
@@ -48,13 +49,11 @@ class DocRef<D extends DocData> {
   /// Reads the document referenced by this DocumentReference
   ///
   /// If no document exists, the read will return null.
-  Future<DocSnapshot<D>> get() {
-    return raw.get().then(
-          (ds) => DocSnapshot<D>._from(
-            _firestore,
-            this,
-            ds.data,
-          ),
+  Future<DocSnapshot<D>> get({
+    Source source: Source.serverAndCache,
+  }) async {
+    return raw.get(source: source).then(
+          (ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds),
         );
   }
 
@@ -70,8 +69,14 @@ class DocRef<D extends DocData> {
     );
   }
 
-  Stream<DocSnapshot<D>> snapshots() {
-    return raw.snapshots().map((ds) => DocSnapshot<D>._from(_firestore, this, ds.data));
+  Stream<DocSnapshot<D>> snapshots({
+    bool includeMetadataChanges = false,
+  }) {
+    return raw
+        .snapshots(
+          includeMetadataChanges: includeMetadataChanges,
+        )
+        .map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds));
   }
 
   /// Updates fields in the document referred to by this DocumentReference.
@@ -92,19 +97,31 @@ class DocRef<D extends DocData> {
 
 /// [DocumentSnapshot]
 class DocSnapshot<D extends DocData> {
-  DocSnapshot(this.ref, this.data) : assert(ref != null);
+  DocSnapshot(this.ref, this.data, this.metadata) : assert(ref != null);
 
-  DocSnapshot._from(TypedFirestore firestore, DocRef<D> ref, Map<String, dynamic> data)
-      : this(ref, data == null ? null : firestore._serializers.deserialize(data, specifiedType: FullType(D)) as D);
+  DocSnapshot._from(TypedFirestore firestore, DocRef<D> ref, Map<String, dynamic> data, fs.SnapshotMetadata metadata)
+      : this(
+          ref,
+          data == null ? null : firestore._serializers.deserialize(data, specifiedType: FullType(D)) as D,
+          metadata,
+        );
 
   /// The reference that produced this snapshot
   final DocRef<D> ref;
 
   DocSnapshot._fromSnapshot(TypedFirestore firestore, fs.DocumentSnapshot ds)
-      : this._from(firestore, DocRef._(firestore, ds.reference), ds.data);
+      : this._from(
+          firestore,
+          DocRef._(firestore, ds.reference),
+          ds.data,
+          ds.metadata,
+        );
 
-  /// Contains all the data of this snapshot
+  /// Contains all the data of this snapshot.
   final D data;
+
+  /// Metadata about a snapshot, describing the state of the snapshot.
+  final fs.SnapshotMetadata metadata;
 
   /// Returns the ID of the snapshot's document
   String get id => ref.id;
@@ -117,8 +134,9 @@ class DocSnapshot<D extends DocData> {
 class TypedQuerySnapshot<D extends DocData> {
   final List<fs.DocumentChange> docChanges;
   final List<DocSnapshot<D>> docs;
+  final fs.SnapshotMetadata metadata;
 
-  const TypedQuerySnapshot(this.docChanges, this.docs);
+  const TypedQuerySnapshot(this.docChanges, this.docs, this.metadata);
 }
 
 /// [CollectionReference]
@@ -280,21 +298,31 @@ class TypedQuery<D extends DocData> {
 
   /// Fetch the documents for this query
   ///
-  Future<TypedQuerySnapshot<D>> getDocs() async {
-    final qs = await _inner.getDocuments();
+  Future<TypedQuerySnapshot<D>> getDocs({
+    Source source = fs.Source.serverAndCache,
+  }) async {
+    final qs = await _inner.getDocuments(source: source);
 
     return TypedQuerySnapshot(
       qs.documentChanges,
       qs.documents.map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds)).toList(growable: false),
+      qs.metadata,
     );
   }
 
   /// Notifies of query results at this location
-  Stream<TypedQuerySnapshot<D>> snapshots() {
-    return _inner.snapshots().map((qs) {
+  Stream<TypedQuerySnapshot<D>> snapshots({
+    bool includeMetadataChanges = false,
+  }) {
+    return _inner
+        .snapshots(
+      includeMetadataChanges: includeMetadataChanges,
+    )
+        .map((qs) {
       return TypedQuerySnapshot(
         qs.documentChanges,
         qs.documents.map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds)).toList(growable: false),
+        qs.metadata,
       );
     });
   }
@@ -316,35 +344,43 @@ class _MappedQuery<D extends DocData> extends TypedQuery<D> {
 
   /// Fetch the documents for this query
   ///
-  Future<TypedQuerySnapshot<D>> getDocs() async {
-    final qs = await _inner.getDocuments();
+  Future<TypedQuerySnapshot<D>> getDocs({
+    Source source = fs.Source.serverAndCache,
+  }) async {
+    final qs = await _inner.getDocuments(source: source);
 
     final docs = await Future.wait(
       qs.documents.map((ds) async {
         final ss = DocSnapshot<D>._fromSnapshot(_firestore, ds);
-        return DocSnapshot(ss.ref, await mapper(ss.data));
+        return DocSnapshot(ss.ref, await mapper(ss.data), ss.metadata);
       }).toList(growable: false),
     );
 
     return TypedQuerySnapshot(
       qs.documentChanges,
       docs,
+      qs.metadata,
     );
   }
 
   /// Notifies of query results at this location
-  Stream<TypedQuerySnapshot<D>> snapshots() async* {
-    await for (final qs in _inner.snapshots()) {
+  Stream<TypedQuerySnapshot<D>> snapshots({
+    bool includeMetadataChanges = false,
+  }) async* {
+    await for (final qs in _inner.snapshots(
+      includeMetadataChanges: includeMetadataChanges,
+    )) {
       final docs = await Future.wait(
         qs.documents.map((ds) async {
           final ss = DocSnapshot<D>._fromSnapshot(_firestore, ds);
-          return DocSnapshot(ss.ref, await mapper(ss.data));
+          return DocSnapshot(ss.ref, await mapper(ss.data), ds.metadata);
         }).toList(growable: false),
       );
 
       yield TypedQuerySnapshot(
         qs.documentChanges,
         docs,
+        qs.metadata,
       );
     }
   }
@@ -364,8 +400,10 @@ class _MapList<D extends DocData> extends TypedQuery<D> {
 
   /// Fetch the documents for this query
   ///
-  Future<TypedQuerySnapshot<D>> getDocs() async {
-    final qs = await _inner.getDocuments();
+  Future<TypedQuerySnapshot<D>> getDocs({
+    Source source = fs.Source.serverAndCache,
+  }) async {
+    final qs = await _inner.getDocuments(source: source);
 
     return TypedQuerySnapshot(
       qs.documentChanges,
@@ -376,12 +414,17 @@ class _MapList<D extends DocData> extends TypedQuery<D> {
           growable: false,
         ),
       ),
+      qs.metadata,
     );
   }
 
   /// Notifies of query results at this location
-  Stream<TypedQuerySnapshot<D>> snapshots() async* {
-    await for (final qs in _inner.snapshots()) {
+  Stream<TypedQuerySnapshot<D>> snapshots({
+    bool includeMetadataChanges = false,
+  }) async* {
+    await for (final qs in _inner.snapshots(
+      includeMetadataChanges: includeMetadataChanges,
+    )) {
       yield TypedQuerySnapshot(
         qs.documentChanges,
         await mapper(
@@ -391,6 +434,7 @@ class _MapList<D extends DocData> extends TypedQuery<D> {
             growable: false,
           ),
         ),
+        qs.metadata,
       );
     }
   }

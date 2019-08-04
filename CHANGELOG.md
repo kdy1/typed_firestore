@@ -1,3 +1,13 @@
+## [0.3.0] - 2019-08-04
+
+ -  `TypedQuery<D>`
+   - `.getDocs()`: Added `source`.
+   - `.snapshots()`: Added `includeMetadataChanges`.
+    
+ - `DocRef<D>`
+   - `.get()`: Added `source`.
+   - `.snapshots()`: Added `includeMetadataChanges`.
+ 
 ## [0.2.2] - 2019-07-31
 
  - `TypedQuery.map`
