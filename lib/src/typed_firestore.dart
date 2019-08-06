@@ -202,6 +202,7 @@ class TypedQuery<D extends DocData> {
     dynamic isLessThanOrEqualTo,
     dynamic isGreaterThan,
     dynamic isGreaterThanOrEqualTo,
+    dynamic arrayContains,
     bool isNull,
   }) {
     return TypedQuery(
@@ -213,6 +214,7 @@ class TypedQuery<D extends DocData> {
           isLessThanOrEqualTo: isLessThanOrEqualTo,
           isGreaterThan: isGreaterThan,
           isGreaterThanOrEqualTo: isGreaterThanOrEqualTo,
+          arrayContains: arrayContains,
           isNull: isNull,
         ));
   }
