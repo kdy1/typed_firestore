@@ -1,3 +1,8 @@
+## [0.3.1] - 2019-08-08
+
+ - Added `collectionGroup`
+
+
 ## [0.3.0] - 2019-08-04
 
  -  `TypedQuery<D>`
