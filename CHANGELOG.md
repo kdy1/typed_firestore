@@ -1,3 +1,7 @@
+## [0.3.2] - 2019-08-09
+
+ - Added `DocRef<T>.parent`
+
 ## [0.3.1] - 2019-08-08
 
  - Added `collectionGroup`

@@ -45,6 +45,9 @@ class DocRef<D extends DocData> {
   /// Slash-delimited path representing the database location of this query.
   String get path => raw.path;
 
+  /// Parent returns the containing [CollectionReference].
+  CollRef<D> parent() => CollRef._(_firestore, raw.parent());
+
   ///	Returns the reference of a collection contained inside of this document.
   CollRef<T> collection<T extends DocData>(String path) =>
       CollRef._(_firestore, raw.collection(path));
