@@ -298,7 +298,8 @@ class TypedQuery<D extends DocData> {
           ));
 
   /// `mapper` is called **after** fetching documents.
-  TypedQuery<D> mapList(Mapper<List<DocSnapshot<D>>> mapper) {
+  TypedQuery<T> mapList<T extends DocData>(
+      Mapper<List<DocSnapshot<D>>, List<DocSnapshot<T>>> mapper) {
     return _MapList(
       firestore: _firestore,
       inner: _inner,
@@ -307,7 +308,7 @@ class TypedQuery<D extends DocData> {
   }
 
   /// `mapper` is called **after** fetching documents.
-  TypedQuery<D> map(Mapper<D> mapper) {
+  TypedQuery<D> map(Mapper<D, D> mapper) {
     return _MappedQuery(
       firestore: _firestore,
       inner: _inner,
@@ -351,10 +352,11 @@ class TypedQuery<D extends DocData> {
   }
 }
 
-typedef FutureOr<T> Mapper<T>(T data);
+/// Mapper maps `S` into `T`.
+typedef FutureOr<T> Mapper<S, T>(S data);
 
 class _MappedQuery<D extends DocData> extends TypedQuery<D> {
-  final Mapper<D> mapper;
+  final Mapper<D, D> mapper;
 
   _MappedQuery({
     @required TypedFirestore firestore,
@@ -373,7 +375,7 @@ class _MappedQuery<D extends DocData> extends TypedQuery<D> {
     final qs = await _inner.getDocuments(source: source);
 
     final docs = await Future.wait(
-      qs.documents.map((ds) async {
+      qs.documents.map((fs.DocumentSnapshot ds) async {
         final ss = DocSnapshot<D>._fromSnapshot(_firestore, ds);
         return DocSnapshot(ss.ref, await mapper(ss.data), ss.metadata);
       }).toList(growable: false),
@@ -396,7 +398,7 @@ class _MappedQuery<D extends DocData> extends TypedQuery<D> {
       final docs = await Future.wait(
         qs.documents.map((ds) async {
           final ss = DocSnapshot<D>._fromSnapshot(_firestore, ds);
-          return DocSnapshot(ss.ref, await mapper(ss.data), ds.metadata);
+          return DocSnapshot<D>(ss.ref, await mapper(ss.data), ds.metadata);
         }).toList(growable: false),
       );
 
@@ -409,8 +411,8 @@ class _MappedQuery<D extends DocData> extends TypedQuery<D> {
   }
 }
 
-class _MapList<D extends DocData> extends TypedQuery<D> {
-  final Mapper<List<DocSnapshot<D>>> mapper;
+class _MapList<S extends DocData, T extends DocData> extends TypedQuery<T> {
+  final Mapper<List<DocSnapshot<S>>, List<DocSnapshot<T>>> mapper;
 
   _MapList({
     @required TypedFirestore firestore,
@@ -423,7 +425,7 @@ class _MapList<D extends DocData> extends TypedQuery<D> {
 
   /// Fetch the documents for this query
   ///
-  Future<TypedQuerySnapshot<D>> getDocs({
+  Future<TypedQuerySnapshot<T>> getDocs({
     Source source = fs.Source.serverAndCache,
   }) async {
     final qs = await _inner.getDocuments(source: source);
@@ -432,17 +434,15 @@ class _MapList<D extends DocData> extends TypedQuery<D> {
       qs.documentChanges,
       await mapper(
         qs.documents.map((ds) {
-          return DocSnapshot<D>._fromSnapshot(_firestore, ds);
-        }).toList(
-          growable: false,
-        ),
+          return DocSnapshot<S>._fromSnapshot(_firestore, ds);
+        }).toList(growable: false),
       ),
       qs.metadata,
     );
   }
 
   /// Notifies of query results at this location
-  Stream<TypedQuerySnapshot<D>> snapshots({
+  Stream<TypedQuerySnapshot<T>> snapshots({
     bool includeMetadataChanges = false,
   }) async* {
     await for (final qs in _inner.snapshots(
@@ -452,7 +452,7 @@ class _MapList<D extends DocData> extends TypedQuery<D> {
         qs.documentChanges,
         await mapper(
           qs.documents.map((ds) {
-            return DocSnapshot<D>._fromSnapshot(_firestore, ds);
+            return DocSnapshot<S>._fromSnapshot(_firestore, ds);
           }).toList(
             growable: false,
           ),
