@@ -9,7 +9,7 @@ build/
 .flutter-plugins
 
 *.log
-#*.g.dart
+*.g.dart
 
 
 GeneratedPluginRegistrant.java
