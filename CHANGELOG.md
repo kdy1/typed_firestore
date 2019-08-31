@@ -1,3 +1,7 @@
+## [0.3.4] - 2019-08-01
+
+ - All types now implements hashCode and `==`.
+
 ## [0.3.3] - 2019-08-27
 
  - `.mapList` can now changes type.
