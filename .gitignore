@@ -9,16 +9,18 @@ build/
 .flutter-plugins
 
 *.log
-*.g.dart
 
 
 GeneratedPluginRegistrant.java
 Generated.xcconfig
 GeneratedPluginRegistrant.h
 GeneratedPluginRegistrant.m
+.flutter-plugins-dependencies
 
 *.iml
 .idea/
 *.lock
 
 local.properties
+
+*.g.dart

@@ -1,8 +1,7 @@
 name: typed_firestore
 description: Typed firebase.storage for flutter
-author: DongYoon Kang <kdy1@outlook.kr>
 homepage: https://github.com/kdy1/typed_firestore
-version: 0.3.4
+version: 0.4.0
 
 environment:
   sdk: '>=2.0.0-dev.54 <3.0.0'
@@ -10,14 +9,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  built_value: ^6.5.0
-  cloud_firestore: ^0.12.9
+  built_value: ^7.0.8
+  cloud_firestore: ^0.13.0+1
   quiver: '^2.0.0'
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  mockito: ^4.0.0
-  built_value_generator: ^6.5.0
-  build_runner: ^1.4.0
+  mockito: ^4.1.1
+  built_value_generator: ^7.0.8
+  build_runner: ^1.7.3
 

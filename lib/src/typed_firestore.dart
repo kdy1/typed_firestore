@@ -1,18 +1,22 @@
 import 'dart:async';
 
 import 'package:built_value/serializer.dart';
+import 'package:built_value/standard_json_plugin.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as fs;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:quiver/core.dart';
 
-import 'data.dart';
+import '../data.dart';
 
+/// You don't need to add `StandardJsonPlugin`.
 class TypedFirestore {
   final fs.Firestore _inner;
   final Serializers _serializers;
 
-  TypedFirestore(this._inner, this._serializers);
+  TypedFirestore(this._inner, Serializers serializers)
+      : _serializers =
+            (serializers.toBuilder()..addPlugin(StandardJsonPlugin())).build();
 
   /// Gets a CollectionReference for the specified Firestore path.
   CollRef<D> collection<D extends DocData>(String path) {
@@ -33,7 +37,10 @@ class TypedFirestore {
   int get hashCode => hash2(_inner, _serializers);
 
   @override
-  bool operator ==(other) => other is TypedFirestore && this._inner == other._inner && this._serializers == other._serializers;
+  bool operator ==(other) =>
+      other is TypedFirestore &&
+      this._inner == other._inner &&
+      this._serializers == other._serializers;
 }
 
 /// [DocumentReference]
@@ -55,7 +62,8 @@ class DocRef<D extends DocData> {
   CollRef<D> parent() => CollRef._(_firestore, raw.parent());
 
   ///	Returns the reference of a collection contained inside of this document.
-  CollRef<T> collection<T extends DocData>(String path) => CollRef._(_firestore, raw.collection(path));
+  CollRef<T> collection<T extends DocData>(String path) =>
+      CollRef._(_firestore, raw.collection(path));
 
   /// Returns the reference of a collection contained inside of this document.
   Future<void> delete() => raw.delete();
@@ -78,7 +86,8 @@ class DocRef<D extends DocData> {
   /// If merge is true, the provided data will be merged into an existing document instead of overwriting.
   Future<void> setData(D data, {bool merge: false}) {
     return raw.setData(
-      _firestore._serializers.serialize(data, specifiedType: FullType(D)) as Map<String, dynamic>,
+      _firestore._serializers.serialize(data, specifiedType: FullType(D))
+          as Map<String, dynamic>,
       merge: merge,
     );
   }
@@ -98,7 +107,8 @@ class DocRef<D extends DocData> {
   /// If no document exists yet, the update will fail.
   Future<void> updateData(D data) {
     return raw.updateData(
-      _firestore._serializers.serialize(data, specifiedType: FullType(D)) as Map<String, dynamic>,
+      _firestore._serializers.serialize(data, specifiedType: FullType(D))
+          as Map<String, dynamic>,
     );
   }
 
@@ -106,17 +116,22 @@ class DocRef<D extends DocData> {
   int get hashCode => hash2(_firestore, raw);
 
   @override
-  bool operator ==(other) => other is DocRef<D> && _firestore == other._firestore && raw == other.raw;
+  bool operator ==(other) =>
+      other is DocRef<D> && _firestore == other._firestore && raw == other.raw;
 }
 
 /// [DocumentSnapshot]
 class DocSnapshot<D extends DocData> {
   DocSnapshot(this.ref, this.data, this.metadata) : assert(ref != null);
 
-  DocSnapshot._from(TypedFirestore firestore, DocRef<D> ref, Map<String, dynamic> data, fs.SnapshotMetadata metadata)
+  DocSnapshot._from(TypedFirestore firestore, DocRef<D> ref,
+      Map<String, dynamic> data, fs.SnapshotMetadata metadata)
       : this(
           ref,
-          data == null ? null : firestore._serializers.deserialize(data, specifiedType: FullType(D)) as D,
+          data == null
+              ? null
+              : firestore._serializers
+                  .deserialize(data, specifiedType: FullType(D)) as D,
           metadata,
         );
 
@@ -147,7 +162,11 @@ class DocSnapshot<D extends DocData> {
   int get hashCode => hash3(ref, data, metadata);
 
   @override
-  bool operator ==(other) => other is DocSnapshot<D> && this.ref == other.ref && this.data == other.data && this.metadata == other.metadata;
+  bool operator ==(other) =>
+      other is DocSnapshot<D> &&
+      this.ref == other.ref &&
+      this.data == other.data &&
+      this.metadata == other.metadata;
 }
 
 /// [QuerySnapshot]
@@ -163,7 +182,10 @@ class TypedQuerySnapshot<D extends DocData> {
 
   @override
   bool operator ==(other) =>
-      other is TypedQuerySnapshot<D> && this.docChanges == other.docChanges && this.docs == other.docs && this.metadata == other.metadata;
+      other is TypedQuerySnapshot<D> &&
+      this.docChanges == other.docChanges &&
+      this.docs == other.docs &&
+      this.metadata == other.metadata;
 }
 
 /// [CollectionReference]
@@ -209,7 +231,10 @@ class CollRef<D extends DocData> extends TypedQuery<D> {
   int get hashCode => hash2(_firestore, _ref);
 
   @override
-  bool operator ==(other) => other is CollRef<D> && this._firestore == other._firestore && this._ref == other._ref;
+  bool operator ==(other) =>
+      other is CollRef<D> &&
+      this._firestore == other._firestore &&
+      this._ref == other._ref;
 }
 
 class TypedQuery<D extends DocData> {
@@ -299,7 +324,8 @@ class TypedQuery<D extends DocData> {
   }
 
   /// Creates and returns a new Query that's additionally limited to only return up to the specified number of documents.
-  TypedQuery<D> limit(int length) => TypedQuery(_firestore, _inner.limit(length));
+  TypedQuery<D> limit(int length) =>
+      TypedQuery(_firestore, _inner.limit(length));
 
   /// Creates and returns a new Query that's additionally sorted by the specified field.
   TypedQuery<D> orderBy(
@@ -314,7 +340,8 @@ class TypedQuery<D extends DocData> {
           ));
 
   /// `mapper` is called **after** fetching documents.
-  TypedQuery<T> mapList<T extends DocData>(Mapper<List<DocSnapshot<D>>, List<DocSnapshot<T>>> mapper) {
+  TypedQuery<T> mapList<T extends DocData>(
+      Mapper<List<DocSnapshot<D>>, List<DocSnapshot<T>>> mapper) {
     return _MapList(
       firestore: _firestore,
       inner: _inner,
@@ -340,7 +367,9 @@ class TypedQuery<D extends DocData> {
 
     return TypedQuerySnapshot(
       qs.documentChanges,
-      qs.documents.map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds)).toList(growable: false),
+      qs.documents
+          .map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds))
+          .toList(growable: false),
       qs.metadata,
     );
   }
@@ -356,7 +385,9 @@ class TypedQuery<D extends DocData> {
         .map((qs) {
       return TypedQuerySnapshot(
         qs.documentChanges,
-        qs.documents.map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds)).toList(growable: false),
+        qs.documents
+            .map((ds) => DocSnapshot<D>._fromSnapshot(_firestore, ds))
+            .toList(growable: false),
         qs.metadata,
       );
     });
@@ -366,7 +397,10 @@ class TypedQuery<D extends DocData> {
   int get hashCode => hash2(_inner, _firestore);
 
   @override
-  bool operator ==(other) => other is TypedQuery<D> && this._inner == other._inner && this._firestore == other._firestore;
+  bool operator ==(other) =>
+      other is TypedQuery<D> &&
+      this._inner == other._inner &&
+      this._firestore == other._firestore;
 }
 
 /// Mapper maps `S` into `T`.
@@ -432,7 +466,10 @@ class _MappedQuery<D extends DocData> extends TypedQuery<D> {
 
   @override
   bool operator ==(other) =>
-      other is _MappedQuery<D> && this._inner == other._inner && this._firestore == other._firestore && this.mapper == other.mapper;
+      other is _MappedQuery<D> &&
+      this._inner == other._inner &&
+      this._firestore == other._firestore &&
+      this.mapper == other.mapper;
 }
 
 class _MapList<S extends DocData, T extends DocData> extends TypedQuery<T> {
@@ -490,5 +527,8 @@ class _MapList<S extends DocData, T extends DocData> extends TypedQuery<T> {
   int get hashCode => hash3(_inner, _firestore, mapper);
   @override
   bool operator ==(other) =>
-      other is _MapList<S, T> && this._inner == other._inner && this._firestore == other._firestore && this.mapper == other.mapper;
+      other is _MapList<S, T> &&
+      this._inner == other._inner &&
+      this._firestore == other._firestore &&
+      this.mapper == other.mapper;
 }

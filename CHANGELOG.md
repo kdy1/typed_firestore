@@ -1,3 +1,9 @@
+## [0.4.0] - 2020-01-28
+
+ - Updated cloud_firestore
+ - Export `Data` and `DocData` from separate lib to support sharing models with server. 
+
+
 ## [0.3.4] - 2019-08-01
 
  - All types now implements hashCode and `==`.

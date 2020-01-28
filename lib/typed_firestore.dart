@@ -1,4 +1,5 @@
 library typed_firestore;
 
-export 'src/data.dart';
+export 'data.dart';
+export 'src/typed_firestore.dart';
 export 'src/typed_firestore.dart';
