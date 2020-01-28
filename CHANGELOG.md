@@ -1,3 +1,8 @@
+## [0.4.1] - 2020-01-28
+
+ - Extract `Data` and `DocData` as a separate package (not a file in lib). 
+
+
 ## [0.4.0] - 2020-01-28
 
  - Updated cloud_firestore

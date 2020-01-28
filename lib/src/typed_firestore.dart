@@ -6,8 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart' as fs;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:quiver/core.dart';
-
-import '../data.dart';
+import 'package:typed_fb_data/data.dart';
 
 /// You don't need to add `StandardJsonPlugin`.
 class TypedFirestore {
