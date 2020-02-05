@@ -1,3 +1,7 @@
+## [0.4.2] - 2020-01-05
+
+ - Removed duplicate.
+
 ## [0.4.1] - 2020-01-28
 
  - Extract `Data` and `DocData` as a separate package (not a file in lib). 
