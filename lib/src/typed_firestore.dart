@@ -189,23 +189,23 @@ class TypedQuerySnapshot<D extends DocData> {
 
 /// [CollectionReference]
 class CollRef<D extends DocData> extends TypedQuery<D> {
-  final fs.CollectionReference _ref;
+  final fs.CollectionReference raw;
 
-  const CollRef._(TypedFirestore firestore, this._ref)
-      : assert(_ref != null),
-        super(firestore, _ref);
+  const CollRef._(TypedFirestore firestore, this.raw)
+      : assert(raw != null),
+        super(firestore, raw);
 
   /// ID of the referenced collection.
-  String get id => _ref.id;
+  String get id => raw.id;
 
   /// A string containing the slash-separated path to this CollectionReference (relative to the root of the database).
-  String get path => _ref.path;
+  String get path => raw.path;
 
   /// For subcollections, parent returns the containing [DocumentReference].
   ///
   /// For root collections, null is returned.
   DocRef<P> parent<P extends DocData>() {
-    final p = _ref.parent();
+    final p = raw.parent();
     if (p == null) return null;
     return DocRef._(_firestore, p);
   }
@@ -215,7 +215,7 @@ class CollRef<D extends DocData> extends TypedQuery<D> {
   /// If no path is provided, an auto-generated ID is used.
   ///
   /// The unique key generated is prefixed with a client-generated timestamp so that the resulting list will be chronologically-sorted.
-  DocRef<D> doc([String path]) => DocRef._(_firestore, _ref.document(path));
+  DocRef<D> doc([String path]) => DocRef._(_firestore, raw.document(path));
 
   /// Returns a DocumentReference with an auto-generated ID, after populating it with provided data.
   ///
@@ -227,13 +227,13 @@ class CollRef<D extends DocData> extends TypedQuery<D> {
   }
 
   @override
-  int get hashCode => hash2(_firestore, _ref);
+  int get hashCode => hash2(_firestore, raw);
 
   @override
   bool operator ==(other) =>
       other is CollRef<D> &&
       this._firestore == other._firestore &&
-      this._ref == other._ref;
+      this.raw == other.raw;
 }
 
 class TypedQuery<D extends DocData> {

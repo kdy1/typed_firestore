@@ -1,3 +1,8 @@
+## [0.4.3] - 2020-07-15
+
+ - Exposed `CollRef.raw`
+
+
 ## [0.4.2] - 2020-01-05
 
  - Removed duplicate.
