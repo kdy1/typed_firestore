@@ -1,3 +1,8 @@
+## [0.4.4] - 2020-07-17
+
+ - Fixed `==` for `DocSnapshot`.
+
+
 ## [0.4.3] - 2020-07-15
 
  - Exposed `CollRef.raw`

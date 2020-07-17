@@ -1,7 +1,7 @@
 name: typed_firestore
 description: Typed firebase.storage for flutter
 homepage: https://github.com/kdy1/typed_firestore
-version: 0.4.3
+version: 0.4.4
 
 environment:
   sdk: ">=2.7.0 <3.0.0"

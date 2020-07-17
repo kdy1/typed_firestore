@@ -154,18 +154,20 @@ class DocSnapshot<D extends DocData> {
   /// Returns the ID of the snapshot's document
   String get id => ref.id;
 
+  /// Slash-delimited path representing the database location of this query.
+  String get path => ref.path;
+
   /// Returns `true` if the document exists.
   bool get exists => data != null;
 
   @override
-  int get hashCode => hash3(ref, data, metadata);
+  int get hashCode => hash2(path, data);
 
   @override
   bool operator ==(other) =>
       other is DocSnapshot<D> &&
-      this.ref == other.ref &&
-      this.data == other.data &&
-      this.metadata == other.metadata;
+      this.path == other.path &&
+      this.data == other.data;
 }
 
 /// [QuerySnapshot]
