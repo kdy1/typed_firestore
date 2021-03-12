@@ -1,18 +1,18 @@
 name: typed_firestore
 description: Typed firebase.storage for flutter
 homepage: https://github.com/kdy1/typed_firestore
-version: 0.4.4
+version: 0.6.0
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  built_value: ^7.1.0
-  cloud_firestore: ^0.13.7
-  quiver: '^2.0.0'
-  typed_fb_data: ^0.0.1
+  built_value: ^8.0.2
+  cloud_firestore: ^1.0.1
+  quiver: '^3.0.0'
+  typed_fb_data: ^0.2.1
 
 dev_dependencies:
   flutter_test:
